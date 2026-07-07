@@ -1,0 +1,48 @@
+:root {
+  /* Marca */
+  --primary: #d4537e; /* rosa dessaturado, ações e destaques */
+  --primary-soft: #fbeaf0; /* fundo de cards hero e itens ativos */
+  --primary-mid: #f4c0d1; /* trilhas de progresso, fundos de ícone */
+  --primary-deep: #4b1528; /* texto sobre fundos rosa */
+
+  /* Neutros quentes */
+  --bg: #faf8f5; /* fundo da página */
+  --surface: #ffffff; /* cards */
+  --text: #2c2c2a; /* texto principal */
+  --text-soft: #6b6a66; /* texto secundário */
+  --text-muted: #a3a29c; /* dicas, itens futuros */
+  --border: #ecece5; /* borda sutil de 1px */
+
+  /* Risco — usar SOMENTE em chips e indicadores de status, nunca para decorar a tela */
+  --risk-low: #1d9e75;
+  --risk-low-bg: #e1f5ee;
+  --risk-low-text: #04342c;
+  --risk-mid: #ef9f27;
+  --risk-mid-bg: #faeeda;
+  --risk-mid-text: #412402;
+  --risk-high: #e24b4a;
+  --risk-high-bg: #fcebeb;
+  --risk-high-text: #501313;
+
+  /* Espaçamento — múltiplos de 4px */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+
+  /* Forma */
+  --radius-card: 16px;
+  --radius-card-sm: 12px;
+  --radius-pill: 999px;
+  --shadow-float: 0 4px 16px rgba(44, 44, 42, 0.06);
+
+  /* Tipografia — uma família só, pesos 400 e 600 apenas */
+  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --text-caption: 12px;
+  --text-secondary: 13px;
+  --text-body: 15px;
+  --text-title: 17px;
+  --text-hero: 22px;
+}
