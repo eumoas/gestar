@@ -6,9 +6,10 @@ rubrica do curso (seção 8.2 do [SDD](SDD-gestar.md)).
 
 **Nota de transparência sobre o formato.** O plano original do SDD previa "dez
 prompts incrementais, um commit ao final de cada bloco". Na prática, esta
-sessão foi conduzida em **4 prompts mais amplos**, cada um cobrindo várias
+sessão foi conduzida em **5 prompts mais amplos**, cada um cobrindo várias
 mudanças relacionadas (o agente quebrou cada prompt em várias edições de
-arquivo, mas sem um commit por sub-etapa). O registro abaixo reflete o que
+arquivo, e no Prompt 5 em um commit por tela, mas sem um commit por
+sub-etapa nos prompts anteriores). O registro abaixo reflete o que
 realmente aconteceu, prompt a prompt, incluindo os bugs encontrados pelo
 próprio processo de verificação — não uma reconstrução idealizada.
 
@@ -155,3 +156,52 @@ e deploy no Railway estão sendo conduzidos em conjunto com o usuário logo em
 seguida neste mesmo documento de trabalho, já que dependem de decisões dele
 (nome/visibilidade do repositório, autenticação do `gh` e do Railway) que o
 agente não pode assumir sozinho.
+
+---
+
+## Prompt 5 — Redesign visual completo, seguindo CLAUDE-design.md
+
+**Prompt:** depois de ver o app publicado, o usuário achou o design e as
+funcionalidades "horríveis" e pediu um redesign completo, citando referências
+(Stripe, Linear, Notion, Headspace Health), paleta azul `#183EFF` e stack
+Tailwind + shadcn/ui. Ao tentar instalar o Tailwind, o usuário rejeitou a
+ferramenta e, em seguida, apontou para um arquivo já existente no repositório,
+`CLAUDE-design.md`, com uma especificação de design completamente diferente
+(paleta rosé acolhedora estilo Flo/Clue/Apple Health, CSS puro com tokens,
+sem Tailwind/shadcn) e pediu para eu seguir esse documento em vez do pedido
+anterior — confirmado explicitamente quando perguntado.
+
+**Processo:** como era uma mudança grande, de múltiplos arquivos, com decisões
+de arquitetura em aberto, entrei em modo de planejamento (`EnterPlanMode`)
+antes de escrever qualquer código. O plano identificou conflitos reais entre
+os dois pedidos do usuário (paleta azul vs. rosé, Tailwind vs. CSS puro,
+navegação de 4 vs. 6 abas, progresso circular vs. barra linear, intensidade de
+sintoma pedida no doc mas sem campo correspondente na API) e usei
+`AskUserQuestion` para resolver cada um antes de implementar, em vez de
+assumir. Decisões: manter as 6 abas de navegação; usar `lucide-react` para
+ícones; adicionar um campo `intensidade` opcional e aditivo na API (única
+exceção à regra de "não alterar API" desta rodada, autorizada explicitamente);
+seguir o CLAUDE-design.md integralmente.
+
+**Resultado:** arquivo único de tokens (`frontend/src/styles/tokens.css`),
+biblioteca de componentes base (`Card`, `CardHero`, `Chip`, `ChipSelecionavel`,
+`ProgressBar`, `KpiCard`, `Timeline`/`TimelineItem`, `Button`,
+`IntensityDots`, `Sparkline`) e um util de mapeamento de risco
+(`lib/risco.js`) para nenhuma tela hardcodar cor ou rótulo de risco por conta
+própria. Todas as 6 telas foram refeitas sobre esses componentes, com um
+commit por tela (Home → Carteira → intensidade no backend → Diário → Painel
+da equipe → Cadastro/Triagem), na mesma ordem sugerida pelo documento.
+Nenhuma chamada de API existente mudou de contrato; a única adição foi o
+campo opcional `intensidade`, testado por `curl` nos dois formatos (com e
+sem o campo) para confirmar retrocompatibilidade.
+
+**Ajuste de escopo assumido conscientemente:** o Painel da equipe pede 4
+KPIs, dois dos quais ("consultas atrasadas", "exames pendentes") não existiam
+como agregado em nenhum endpoint. Em vez de criar um endpoint novo (o que
+extrapolaria a única exceção de API combinada), optei por calcular esses dois
+números no cliente, buscando a carteira de cada gestante do dashboard via o
+endpoint já existente — mais chamadas HTTP (aceitável na escala de 8
+gestantes fictícias), zero mudança de contrato.
+
+Screenshots atualizadas em `docs/screenshots/` (as anteriores, do design
+azul/CSS artesanal, ficaram obsoletas e foram substituídas).

@@ -5,7 +5,9 @@ jornada da Caderneta da Gestante do Ministério da Saúde, construído como aval
 intermediária da disciplina de IA Generativa (Pós-graduação em IA Aplicada,
 UniSENAI/FIESC). A especificação completa do produto — problema, arquitetura,
 modelo de dados, divisão em etapas e engenharia de LLM planejada para a Etapa 2 —
-está em [`SDD-gestar.md`](SDD-gestar.md). Este README documenta o que existe hoje,
+está em [`SDD-gestar.md`](SDD-gestar.md). O sistema de design da interface (paleta,
+tokens, componentes base e regras por tela) está em
+[`CLAUDE-design.md`](CLAUDE-design.md). Este README documenta o que existe hoje,
 como rodar e como foi construído.
 
 > **Aviso de protótipo.** Todos os dados são fictícios (gerados por seed). Toda
