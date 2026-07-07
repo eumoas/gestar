@@ -8,12 +8,16 @@ import Carteira from './pages/Carteira';
 import Diario from './pages/Diario';
 import ResultadoTriagem from './pages/ResultadoTriagem';
 import PainelEquipe from './pages/PainelEquipe';
+import logoIcon from './assets/logo-icon.png';
 
 export default function App() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <span className="topbar-brand">Gestar</span>
+        <span className="topbar-brand">
+          <img src={logoIcon} alt="" className="topbar-logo" />
+          Gestar
+        </span>
         <GestanteSwitcher />
       </header>
       <NavBar />

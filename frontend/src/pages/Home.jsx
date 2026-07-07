@@ -7,9 +7,13 @@ import { CardHero, Card } from '../components/ui/Card';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { Chip } from '../components/ui/Chip';
 import { Button } from '../components/ui/Button';
+import { PhotoCard } from '../components/ui/PhotoCard';
 import { infoRisco } from '../lib/risco';
 import { formatarDataCompleta, semanasAteData } from '../lib/datas';
 import { tamanhoNaSemana } from '../lib/tamanhoBebe';
+import heroGestante from '../assets/hero-gestante.jpg';
+import heroPuerperio from '../assets/hero-puerperio.jpg';
+import logoIcon from '../assets/logo-icon.png';
 
 const SEMANAS_GESTACAO = 40;
 
@@ -51,6 +55,16 @@ export default function Home() {
 
   return (
     <div className="stack">
+      <PhotoCard src={heroGestante} alt="Gestante sorridente com as mãos na barriga" height={320} focus="center 30%">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+          <img src={logoIcon} alt="" style={{ width: 26, height: 26 }} />
+          <span style={{ fontWeight: 600, fontSize: 'var(--text-title)' }}>Gestar</span>
+        </div>
+        <p style={{ fontSize: 'var(--text-body)', opacity: 0.95 }}>
+          Sua companheira digital de pré-natal e puerpério
+        </p>
+      </PhotoCard>
+
       <CardHero>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 'var(--space-3)' }}>
           <span style={{ fontSize: 'var(--text-hero)', fontWeight: 600 }}>Semana {selected.semanas}</span>
@@ -103,6 +117,11 @@ export default function Home() {
         <Link to="/carteira"><Button variant="outline" style={{ width: '100%' }}><Calendar size={16} style={{ marginRight: 6, verticalAlign: -3 }} />Ver carteira completa</Button></Link>
         <Link to="/diario"><Button style={{ width: '100%' }}>Registrar sintoma</Button></Link>
       </div>
+
+      <PhotoCard src={heroPuerperio} alt="Mãe brincando com o bebê no colo" height={160}>
+        <p style={{ fontWeight: 600, marginBottom: 2 }}>Cuidado que continua no puerpério</p>
+        <p style={{ fontSize: 'var(--text-caption)', opacity: 0.9 }}>Em breve nesta jornada</p>
+      </PhotoCard>
     </div>
   );
 }
