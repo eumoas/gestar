@@ -19,8 +19,8 @@ export const api = {
   atualizarCarteiraItem: (id, item_id, status) =>
     request(`/gestantes/${id}/carteira`, { method: 'PATCH', body: JSON.stringify({ item_id, status }) }),
   historicoSintomas: (id) => request(`/gestantes/${id}/sintomas`),
-  registrarSintomas: (id, sintomas) =>
-    request(`/gestantes/${id}/sintomas`, { method: 'POST', body: JSON.stringify({ sintomas }) }),
+  registrarSintomas: (id, sintomas, intensidade) =>
+    request(`/gestantes/${id}/sintomas`, { method: 'POST', body: JSON.stringify({ sintomas, intensidade }) }),
   dashboardEquipe: () => request('/equipe/dashboard'),
   listaAlertas: () => request('/equipe/alertas'),
   tratarAlerta: (alertaId) => request(`/equipe/alertas/${alertaId}`, { method: 'PATCH' }),

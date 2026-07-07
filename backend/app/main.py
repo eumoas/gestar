@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Dict, List, Optional
 import datetime
 from .services.triagem_mock import TriagemMock
 
@@ -17,6 +17,11 @@ class GestanteIn(BaseModel):
 
 class SintomasIn(BaseModel):
     sintomas: List[str]
+    # Campo aditivo e opcional: intensidade (1-5) por sintoma selecionado, ex.
+    # {"cefaleia intensa": 4}. Só alimenta o histórico exibido na interface —
+    # a lógica de triagem (TriagemMock.triar) continua recebendo só `sintomas`
+    # e decidindo o nível do mesmo jeito de sempre.
+    intensidade: Optional[Dict[str, int]] = None
 
 
 class CarteiraPatch(BaseModel):
@@ -217,6 +222,7 @@ async def registrar_sintomas(id: int, payload: SintomasIn):
     registro = {
         "data": datetime.datetime.utcnow().isoformat(),
         "sintomas": payload.sintomas,
+        "intensidade": payload.intensidade or {},
         "nivel": resultado["nivel"],
         "mensagem": resultado["mensagem"],
     }
