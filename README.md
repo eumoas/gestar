@@ -1,14 +1,29 @@
-# Gestar — Etapa 1
+<p align="center">
+  <img src="docs/banner.png" alt="Gestar — companheira digital de pré-natal e puerpério para o SUS" width="100%" />
+</p>
 
-Protótipo de plataforma de acompanhamento da gestação e do puerpério inspirada na
-jornada da Caderneta da Gestante do Ministério da Saúde, construído como avaliação
-intermediária da disciplina de IA Generativa (Pós-graduação em IA Aplicada,
-UniSENAI/FIESC). A especificação completa do produto — problema, arquitetura,
-modelo de dados, divisão em etapas e engenharia de LLM planejada para a Etapa 2 —
-está em [`SDD-gestar.md`](SDD-gestar.md). O sistema de design da interface (paleta,
-tokens, componentes base e regras por tela) está em
-[`CLAUDE-design.md`](CLAUDE-design.md). Este README documenta o que existe hoje,
-como rodar e como foi construído.
+<p align="center">
+  <img src="https://img.shields.io/badge/Etapa-1%20%2F%202-D4537E?style=flat-square" alt="Etapa 1 de 2" />
+  <img src="https://img.shields.io/badge/React-18-4B1528?style=flat-square&logo=react&logoColor=white" alt="React 18" />
+  <img src="https://img.shields.io/badge/FastAPI-0.115-4B1528?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/Vite-5-4B1528?style=flat-square&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/Licença-uso%20acadêmico-6B6A66?style=flat-square" alt="Uso acadêmico" />
+</p>
+
+<p align="center">
+  Protótipo de plataforma de acompanhamento da gestação e do puerpério, inspirado na
+  jornada da <strong>Caderneta da Gestante</strong> do Ministério da Saúde — construído
+  como avaliação da disciplina de IA Generativa (Pós-graduação em IA Aplicada,
+  UniSENAI/FIESC).
+</p>
+
+<p align="center">
+  <a href="SDD-gestar.md">Documento de design (SDD)</a> ·
+  <a href="CLAUDE-design.md">Sistema de design da interface</a> ·
+  <a href="PROMPTS.md">Processo com o agente de codificação</a>
+</p>
+
+---
 
 > **Aviso de protótipo.** Todos os dados são fictícios (gerados por seed). Toda
 > triagem é simulada por um motor de regras determinístico e rotulada como tal —
@@ -19,9 +34,9 @@ como rodar e como foi construído.
 
 - [Sobre o projeto](#sobre-o-projeto)
 - [Escopo desta etapa](#escopo-desta-etapa)
+- [Telas](#telas)
 - [Arquitetura](#arquitetura)
 - [Como rodar localmente](#como-rodar-localmente)
-- [Telas e fluxo de navegação](#telas-e-fluxo-de-navegação)
 - [Referência da API](#referência-da-api)
 - [Motor de triagem simulada](#motor-de-triagem-simulada)
 - [Dados de demonstração (seed)](#dados-de-demonstração-seed)
@@ -39,11 +54,11 @@ pouca visibilidade sobre sinais de alerta entre consultas.
 
 O Gestar propõe duas frentes conectadas pelo mesmo backend:
 
-- **Jornada da gestante** (mobile-first): onboarding com cálculo automático de
-  idade gestacional e DPP, carteira de pré-natal por trimestre, diário de
+- **Jornada da gestante** (mobile-first): cadastro com cálculo automático de
+  idade gestacional e DPP, carteira de pré-natal em linha do tempo, diário de
   sintomas com triagem e card de resultado.
-- **Painel da equipe** (desktop): semáforo de risco do território, fila de
-  alertas com ação de tratamento e visão por gestante.
+- **Painel da equipe** (desktop): indicadores do território, fila de alertas
+  com ação de tratamento e visão priorizada por risco.
 
 ## Escopo desta etapa
 
@@ -58,6 +73,56 @@ pipeline de LLM com ferramentas e RAG sobre o protocolo do Ministério da Saúde
 mantendo o mesmo contrato de interface — ver seção 9 do SDD. Um bot de Telegram
 para lembretes de consulta e orientações é uma ideia registrada para uma eventual
 Etapa 3, documentada e fora do escopo avaliado por ora (seção 12 do SDD).
+
+## Telas
+
+Não há autenticação nesta etapa. Em vez disso, existe um seletor de "perfil
+demo" no topo da tela que troca qual gestante fictícia está ativa em toda a
+jornada; a escolha persiste no `localStorage` do navegador. A interface segue
+o sistema de design em [`CLAUDE-design.md`](CLAUDE-design.md) — paleta rosé
+acolhedora, referência em apps como Flo, Clue e Apple Health.
+
+<table>
+<tr>
+<td width="33%" align="center">
+  <img src="docs/screenshots/thumb-01-home.png" width="100%" alt="Início: progresso da gestação, chip de risco, próxima consulta e exame" /><br />
+  <sub><b>Início</b> — progresso, chip de risco, próxima consulta/exame</sub>
+</td>
+<td width="33%" align="center">
+  <img src="docs/screenshots/thumb-03-carteira.png" width="100%" alt="Carteira: timeline vertical de consultas e exames" /><br />
+  <sub><b>Carteira</b> — timeline vertical de consultas e exames</sub>
+</td>
+<td width="33%" align="center">
+  <img src="docs/screenshots/thumb-04-diario.png" width="100%" alt="Diário: sintomas com ícone, intensidade e tendência de risco" /><br />
+  <sub><b>Diário</b> — sintomas, intensidade e tendência de risco</sub>
+</td>
+</tr>
+<tr>
+<td width="33%" align="center">
+  <img src="docs/screenshots/thumb-05-triagem.png" width="100%" alt="Resultado da triagem com chip de risco" /><br />
+  <sub><b>Triagem</b> — resultado simulado com chip de risco</sub>
+</td>
+<td width="33%" align="center">
+  <img src="docs/screenshots/thumb-06-painel-equipe.png" width="100%" alt="Painel da equipe: KPIs, alertas e gestantes por risco" /><br />
+  <sub><b>Painel da equipe</b> — KPIs, alertas, gestantes por risco</sub>
+</td>
+<td width="33%" align="center">
+  <img src="docs/screenshots/thumb-02-onboarding.png" width="100%" alt="Cadastro da gestante" /><br />
+  <sub><b>Cadastro</b> — nova gestante, cálculo automático de DPP</sub>
+</td>
+</tr>
+</table>
+
+<p align="right"><sub>Screenshots completas (página inteira) em <a href="docs/screenshots/">docs/screenshots/</a>.</sub></p>
+
+| Rota | Tela |
+|---|---|
+| `/` | Início |
+| `/onboarding` | Cadastro |
+| `/carteira` | Carteira de pré-natal |
+| `/diario` | Diário de sintomas |
+| `/triagem` | Resultado da triagem |
+| `/equipe` | Painel da equipe |
 
 ## Arquitetura
 
@@ -84,13 +149,16 @@ perdidos a cada reinício do processo, e a migração para PostgreSQL via
 SQLAlchemy é o próximo passo natural antes de (ou junto com) a Etapa 2 — ver
 [Limitações conhecidas](#limitações-conhecidas-e-próximos-passos).
 
-### Estrutura de pastas
+<details>
+<summary><strong>Estrutura de pastas</strong></summary>
 
 ```
 .
-├── SDD-gestar.md              documento de design (fonte da verdade do produto)
+├── SDD-gestar.md              documento de design de produto (fonte da verdade)
+├── CLAUDE-design.md           sistema de design da interface (tokens, componentes, regras por tela)
 ├── PROMPTS.md                 registro do processo com o agente de codificação
 ├── requirements.txt           dependências Python (backend)
+├── Dockerfile                 build único para deploy (frontend + backend)
 ├── backend/
 │   └── app/
 │       ├── main.py            FastAPI: rotas + serve o build do frontend
@@ -99,11 +167,18 @@ SQLAlchemy é o próximo passo natural antes de (ou junto com) a Etapa 2 — ver
 ├── frontend/
 │   └── src/
 │       ├── pages/             as 6 telas (uma por rota)
+│       ├── components/ui/     Card, Chip, ProgressBar, Timeline, KpiCard, Sparkline...
 │       ├── components/        NavBar, GestanteSwitcher
 │       ├── context/           GestanteContext (perfil demo selecionado)
+│       ├── lib/                risco.js, datas.js, tamanhoBebe.js (regras de apresentação)
+│       ├── styles/tokens.css  fonte única de cor, espaçamento e raio
 │       └── api.js             client fetch para o backend
-└── docs/screenshots/          capturas de tela de cada rota (ver PROMPTS.md)
+└── docs/
+    ├── banner.png              imagem de abertura deste README
+    └── screenshots/            capturas de tela de cada rota
 ```
+
+</details>
 
 ## Como rodar localmente
 
@@ -129,7 +204,8 @@ Acesse `http://localhost:5173`. O Vite faz proxy de `/api/*` para
 `http://127.0.0.1:8000` (configurado em `frontend/vite.config.js`), então as
 duas partes conversam sem configuração extra de CORS.
 
-**Rodando como em produção (porta única, sem Vite dev server):**
+<details>
+<summary><strong>Rodando como em produção (porta única, sem Vite dev server)</strong></summary>
 
 ```bash
 cd frontend && npm run build && cd ..
@@ -140,22 +216,7 @@ Nesse modo o FastAPI detecta `frontend/dist` e passa a servir o React já
 buildado na raiz (`/`), com a API continuando em `/api/*` — é exatamente o que
 acontece no deploy (ver [Deploy](#deploy)).
 
-## Telas e fluxo de navegação
-
-Não há autenticação nesta etapa. Em vez disso, existe um seletor de "perfil
-demo" (`GestanteSwitcher`) que troca qual gestante fictícia está ativa em todas
-as telas da jornada; a escolha persiste no `localStorage` do navegador.
-
-| Rota | Tela | O que faz |
-|---|---|---|
-| `/` | Início | Saudação, idade gestacional/DPP calculados, linha do tempo da jornada |
-| `/onboarding` | Cadastro | Formulário de nova gestante (nome, DUM, paridade, condições prévias) |
-| `/carteira` | Carteira de pré-natal | Consultas e exames agrupados por trimestre, com marcação manual de status |
-| `/diario` | Diário de sintomas | Checklist de sintomas do dia + histórico de registros anteriores |
-| `/triagem` | Resultado da triagem | Card de nível de risco (verde/amarelo/vermelho) do último registro |
-| `/equipe` | Painel da equipe | Semáforo do território, fila de alertas pendentes, lista de gestantes |
-
-Screenshots de cada tela estão em [`docs/screenshots/`](docs/screenshots/).
+</details>
 
 ## Referência da API
 
@@ -171,13 +232,15 @@ em JSON.
 | GET | `/gestantes/{id}/carteira` | Itens da carteira (consultas + exames) por trimestre |
 | PATCH | `/gestantes/{id}/carteira` | Atualiza status de um item — `{item_id, status}` |
 | GET | `/gestantes/{id}/sintomas` | Histórico de registros do diário de sintomas |
-| POST | `/gestantes/{id}/sintomas` | Registra sintomas e dispara a triagem — `{sintomas: string[]}` |
+| POST | `/gestantes/{id}/sintomas` | Registra sintomas e dispara a triagem — `{sintomas: string[], intensidade?: {sintoma: 1-5}}` |
 | POST | `/gestantes/{id}/epds` | Registra respostas do EPDS e pontua — `{respostas: {}}` |
 | GET | `/equipe/dashboard` | Contagem por nível de risco + resumo por gestante |
 | GET | `/equipe/alertas` | Lista de alertas gerados pela triagem |
 | PATCH | `/equipe/alertas/{id}` | Marca um alerta como tratado |
 
-Toda resposta de triagem (`/sintomas` e `/epds`) inclui `"simulado": true`.
+Toda resposta de triagem (`/sintomas` e `/epds`) inclui `"simulado": true`. O
+campo `intensidade` é opcional e aditivo — só alimenta o histórico exibido na
+interface, não influencia a lógica de triagem.
 
 ## Motor de triagem simulada
 
@@ -212,8 +275,9 @@ após subir a aplicação, sem precisar registrar sintomas manualmente primeiro.
 
 O histórico completo de prompts, resultados e ajustes está em
 [`PROMPTS.md`](PROMPTS.md), incluindo os bugs encontrados e corrigidos durante
-o processo (data do seed, especificidade de CSS, caminho do build estático).
-As screenshots referenciadas ali estão em `docs/screenshots/`.
+o processo e o redesign visual completo feito a partir de
+[`CLAUDE-design.md`](CLAUDE-design.md). As screenshots referenciadas ali estão
+em `docs/screenshots/`.
 
 ## Deploy
 
