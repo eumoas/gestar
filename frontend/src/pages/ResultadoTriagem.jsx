@@ -2,11 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { api } from '../api';
 import { useGestanteContext } from '../context/GestanteContext';
+import { CardHero } from '../components/ui/Card';
+import { Chip } from '../components/ui/Chip';
+import { Button } from '../components/ui/Button';
+import { infoRisco } from '../lib/risco';
 
 const NIVEL_TEXTO = {
-  verde: 'Sem sinais de alerta. Continue o acompanhamento de rotina.',
-  amarelo: 'Sinais de atenção. Monitore e converse com a equipe de saúde na próxima consulta.',
-  vermelho: 'Sinal de alerta. Procure atendimento o quanto antes.',
+  verde: 'Continue o acompanhamento de rotina.',
+  amarelo: 'Monitore e converse com a equipe de saúde na próxima consulta.',
+  vermelho: 'Procure atendimento o quanto antes.',
 };
 
 export default function ResultadoTriagem() {
@@ -27,26 +31,27 @@ export default function ResultadoTriagem() {
 
   if (!resultado) {
     return (
-      <section className="hero">
-        <h2>Resultado da triagem</h2>
-        <p className="muted">Nenhuma triagem registrada ainda para {selected.nome}.</p>
-        <Link className="btn btn-outline" to="/diario">Registrar sintomas</Link>
-      </section>
+      <div className="stack">
+        <h2 style={{ fontSize: 'var(--text-title)' }}>Resultado da triagem</h2>
+        <p className="muted">Nenhum registro ainda para {selected.nome}.</p>
+        <Link to="/diario"><Button>Registrar sintoma</Button></Link>
+      </div>
     );
   }
 
+  const risco = infoRisco(resultado.nivel);
+
   return (
-    <section className={'hero nivel-' + resultado.nivel}>
-      <h2>Resultado da triagem — {selected.nome}</h2>
-      <span className={'badge badge-' + resultado.nivel} style={{ fontSize: 16 }}>
-        {resultado.nivel.toUpperCase()}
-      </span>
-      <p style={{ marginTop: 12 }}>{resultado.mensagem}</p>
-      <p className="muted">{NIVEL_TEXTO[resultado.nivel]}</p>
-      <p className="muted disclaimer">
+    <div className="stack">
+      <CardHero>
+        <Chip color={risco.color} bg={risco.bg} text={risco.text}>{risco.label}</Chip>
+        <p style={{ marginTop: 'var(--space-3)', fontSize: 'var(--text-title)', fontWeight: 600 }}>{resultado.mensagem}</p>
+        <p style={{ marginTop: 'var(--space-2)' }}>{NIVEL_TEXTO[resultado.nivel]}</p>
+      </CardHero>
+      <p className="hint" style={{ fontStyle: 'italic' }}>
         Resposta simulada (motor de regras) — protótipo acadêmico, não substitui atendimento médico.
       </p>
-      <Link className="btn btn-outline" to="/diario">Novo registro</Link>
-    </section>
+      <Link to="/diario"><Button variant="outline">Registrar novo sintoma</Button></Link>
+    </div>
   );
 }
