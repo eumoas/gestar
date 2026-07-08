@@ -55,8 +55,10 @@ pouca visibilidade sobre sinais de alerta entre consultas.
 O Gestar propõe duas frentes conectadas pelo mesmo backend:
 
 - **Jornada da gestante** (mobile-first): cadastro com cálculo automático de
-  idade gestacional e DPP, carteira de pré-natal em linha do tempo, diário de
-  sintomas com triagem e card de resultado.
+  idade gestacional e DPP, carteira de pré-natal em linha do tempo, carteira de
+  vacinação (Calendário Nacional de Vacinação), diário de sintomas com triagem
+  e card de resultado, e módulo de amamentação com localizador de bancos de
+  leite humano (rBLH).
 - **Painel da equipe** (desktop): indicadores do território, fila de alertas
   com ação de tratamento e visão priorizada por risco.
 
@@ -84,29 +86,37 @@ acolhedora, referência em apps como Flo, Clue e Apple Health.
 
 <table>
 <tr>
-<td width="33%" align="center">
+<td width="25%" align="center">
   <img src="docs/screenshots/thumb-01-home.png" width="100%" alt="Início: progresso da gestação, chip de risco, próxima consulta e exame" /><br />
   <sub><b>Início</b> — progresso, chip de risco, próxima consulta/exame</sub>
 </td>
-<td width="33%" align="center">
+<td width="25%" align="center">
   <img src="docs/screenshots/thumb-03-carteira.png" width="100%" alt="Carteira: timeline vertical de consultas e exames" /><br />
   <sub><b>Carteira</b> — timeline vertical de consultas e exames</sub>
 </td>
-<td width="33%" align="center">
+<td width="25%" align="center">
+  <img src="docs/screenshots/thumb-07-vacinacao.png" width="100%" alt="Carteira de vacinação em timeline" /><br />
+  <sub><b>Vacinação</b> — Calendário Nacional em timeline</sub>
+</td>
+<td width="25%" align="center">
   <img src="docs/screenshots/thumb-04-diario.png" width="100%" alt="Diário: sintomas com ícone, intensidade e tendência de risco" /><br />
   <sub><b>Diário</b> — sintomas, intensidade e tendência de risco</sub>
 </td>
 </tr>
 <tr>
-<td width="33%" align="center">
+<td width="25%" align="center">
+  <img src="docs/screenshots/thumb-08-amamentacao.png" width="100%" alt="Amamentação: orientações e localizador de bancos de leite" /><br />
+  <sub><b>Amamentação</b> — orientações e localizador de BLH</sub>
+</td>
+<td width="25%" align="center">
   <img src="docs/screenshots/thumb-05-triagem.png" width="100%" alt="Resultado da triagem com chip de risco" /><br />
   <sub><b>Triagem</b> — resultado simulado com chip de risco</sub>
 </td>
-<td width="33%" align="center">
+<td width="25%" align="center">
   <img src="docs/screenshots/thumb-06-painel-equipe.png" width="100%" alt="Painel da equipe: KPIs, alertas e gestantes por risco" /><br />
   <sub><b>Painel da equipe</b> — KPIs, alertas, gestantes por risco</sub>
 </td>
-<td width="33%" align="center">
+<td width="25%" align="center">
   <img src="docs/screenshots/thumb-02-onboarding.png" width="100%" alt="Cadastro da gestante" /><br />
   <sub><b>Cadastro</b> — nova gestante, cálculo automático de DPP</sub>
 </td>
@@ -120,19 +130,22 @@ acolhedora, referência em apps como Flo, Clue e Apple Health.
 | `/` | Início |
 | `/onboarding` | Cadastro |
 | `/carteira` | Carteira de pré-natal |
+| `/vacinacao` | Carteira de vacinação |
 | `/diario` | Diário de sintomas |
+| `/amamentacao` | Amamentação e localizador de BLH |
 | `/triagem` | Resultado da triagem |
 | `/equipe` | Painel da equipe |
 
 ## Arquitetura
 
 ```
-frontend (React 18 + Vite, react-router-dom)
+frontend (React 18 + Vite, react-router-dom, react-leaflet)
    │  REST/JSON via /api (proxy do Vite em dev; mesma origem em produção)
    ▼
 backend (FastAPI)
-   ├── app/main.py                 rotas de gestante, equipe e triagem
+   ├── app/main.py                 rotas de gestante, equipe, vacinação, amamentação e BLH
    ├── app/services/triagem_mock.py  motor de regras (Etapa 1)
+   ├── app/data/                   calendario_vacinal.json, blh_unidades.json (491 unidades)
    └── estado em memória            sem banco nesta etapa (ver observação abaixo)
 ```
 
@@ -159,14 +172,21 @@ SQLAlchemy é o próximo passo natural antes de (ou junto com) a Etapa 2 — ver
 ├── PROMPTS.md                 registro do processo com o agente de codificação
 ├── requirements.txt           dependências Python (backend)
 ├── Dockerfile                 build único para deploy (frontend + backend)
+├── scripts/
+│   ├── parse_blh.py            gera backend/app/data/blh_unidades.json a partir da lista da Fiocruz
+│   └── geocodificar_blh.py     preenche lat/lng das unidades via Nominatim (roda uma vez, fora do app)
+├── design/
+│   ├── reference/              documentos-fonte oficiais (calendário vacinal, rede rBLH)
+│   └── brand-source/           imagens de marca em alta resolução (fora do git, ~11MB)
 ├── backend/
 │   └── app/
 │       ├── main.py            FastAPI: rotas + serve o build do frontend
+│       ├── data/               calendario_vacinal.json, blh_unidades.json
 │       └── services/
 │           └── triagem_mock.py  motor de regras determinístico
 ├── frontend/
 │   └── src/
-│       ├── pages/             as 6 telas (uma por rota)
+│       ├── pages/             as 8 telas (uma por rota)
 │       ├── components/ui/     Card, Chip, ProgressBar, Timeline, KpiCard, Sparkline...
 │       ├── components/        NavBar, GestanteSwitcher
 │       ├── context/           GestanteContext (perfil demo selecionado)
@@ -234,6 +254,11 @@ em JSON.
 | GET | `/gestantes/{id}/sintomas` | Histórico de registros do diário de sintomas |
 | POST | `/gestantes/{id}/sintomas` | Registra sintomas e dispara a triagem — `{sintomas: string[], intensidade?: {sintoma: 1-5}}` |
 | POST | `/gestantes/{id}/epds` | Registra respostas do EPDS e pontua — `{respostas: {}}` |
+| GET | `/gestantes/{id}/vacinacao` | Status de cada vacina do calendário (informativa, prevista, pendente ou aplicada) |
+| PATCH | `/gestantes/{id}/vacinacao` | Marca dose aplicada/pendente — `{vacina_id, status}` |
+| GET | `/gestantes/{id}/amamentacao` | Histórico de registros de dificuldade, ordenha ou doação |
+| POST | `/gestantes/{id}/amamentacao` | Registra um evento — `{tipo: 'dificuldade'\|'ordenha'\|'doacao', itens?}` |
+| GET | `/blh/unidades` | Localizador de bancos de leite — `?uf=&municipio=&lat=&lng=`; com lat/lng, ordena por distância Haversine |
 | GET | `/equipe/dashboard` | Contagem por nível de risco + resumo por gestante |
 | GET | `/equipe/alertas` | Lista de alertas gerados pela triagem |
 | PATCH | `/equipe/alertas/{id}` | Marca um alerta como tratado |
@@ -248,19 +273,26 @@ Implementado em `backend/app/services/triagem_mock.py` como regras
 determinísticas — nenhuma chamada a LLM nesta etapa. Cenário principal de
 demonstração (usado nos exemplos e screenshots deste README):
 
-- **Cefaleia intensa + visão embaçada + edema, antes de 37 semanas → vermelho**
-  (padrão compatível com pré-eclâmpsia; orientação de procurar UBS ou
-  maternidade).
+- **Cefaleia intensa, antes de 37 semanas → vermelho**, por si só (padrão
+  compatível com pré-eclâmpsia; orientação de procurar UBS ou maternidade) —
+  não depende de visão embaçada ou edema estarem presentes também.
 - Contrações regulares antes de 37 semanas → vermelho.
 - EPDS ≥ 13 → vermelho; entre 10 e 12 → amarelo.
+- **dTpa não registrada até a semana 24, ou VSR até a semana 32 → amarelo**
+  (folga de 4 semanas sobre a elegibilidade das vacinas, para não pressionar a
+  gestante no primeiro dia em que passa a poder tomá-las).
+- **Dificuldade de amamentação registrada duas vezes na mesma semana → amarelo**,
+  com orientação de contato com o banco de leite mais próximo.
 - Demais combinações → verde ou amarelo, com orientação de autocuidado.
 
 O protocolo do SDD também prevê sangramento como sinal vermelho em qualquer
 fase da gestação; essa regra continua implementada no motor (para fidelidade
 clínica e testável via API), mas **não é exposta como opção no diário de
 sintomas da interface** — decisão de produto para evitar um item sensível no
-meio de demonstrações com público variado. O cenário de cefaleia/pré-eclâmpsia
-é o caminho vermelho de referência na UI.
+meio de demonstrações com público variado. O diário de sintomas também aceita
+texto livre: qualquer coisa fora dos chips fixos é registrada no histórico
+para a gestante indicar ao médico, mesmo sem acionar nenhuma regra automática.
+O cenário de cefaleia/pré-eclâmpsia é o caminho vermelho de referência na UI.
 
 ## Dados de demonstração (seed)
 
@@ -268,8 +300,17 @@ Oito gestantes fictícias são geradas em memória a cada início do backend, co
 DUM calculada **relativa à data atual** (não fixa) — assim elas sempre aparecem
 espalhadas de forma plausível entre o 1º e o 3º trimestre, não importa em que
 dia o protótipo for demonstrado. Uma delas (Sofia Rocha) já nasce com um alerta
-vermelho pendente, para que o painel da equipe seja demonstrável imediatamente
-após subir a aplicação, sem precisar registrar sintomas manualmente primeiro.
+vermelho pendente, e a checagem de vacinação roda uma vez no startup para todas
+— então o painel da equipe já nasce com alertas vermelhos e amarelos reais,
+sem precisar registrar nada manualmente primeiro.
+
+O localizador de banco de leite usa as 491 unidades reais da rBLH-BR
+(Fiocruz/MS), com nome, tipo, endereço e telefone — mas **sem coordenadas
+ainda**: `scripts/geocodificar_blh.py` existe e funciona, só não rodou nesta
+rodada (decisão consciente, ver [Limitações](#limitações-conhecidas-e-próximos-passos)).
+Por isso o mapa mostra "mapa em breve" e o localizador funciona por
+filtro de UF/município; rodando o script depois, o mapa com pinos aparece
+sozinho, sem qualquer mudança de código.
 
 ## Processo de desenvolvimento com o agente de codificação
 
@@ -296,7 +337,13 @@ estão no próprio `Dockerfile` e foram validadas localmente
 - **Sem autenticação**: o seletor de "perfil demo" substitui login nesta etapa,
   conforme escopo definido no SDD para a Etapa 1.
 - **Puerpério/EPDS e conteúdo educativo**: os endpoints existem
-  (`/epds`), mas ainda não têm tela dedicada — não fazem parte das 6 telas
+  (`/epds`), mas ainda não têm tela dedicada — não fazem parte das 8 telas
   priorizadas nesta rodada.
-- **Etapa 2 (triagem por LLM) e eventual bot de Telegram**: fora do escopo
-  deste repositório; ver seções 9 e 12 do SDD.
+- **Bancos de leite sem geocodificação**: `scripts/geocodificar_blh.py` está
+  pronto (consulta o Nominatim, 1 requisição/segundo, ~10-25 min para as 491 unidades) mas
+  não rodou ainda — decisão consciente para não travar a sessão numa chamada
+  de rede longa. O endpoint `/blh/unidades` já sinaliza isso via
+  `geocodificado: false`, e o frontend já trata o caso mostrando lista em vez
+  de mapa, sem exigir mudança de contrato quando o script rodar.
+- **Etapa 2 (triagem por LLM), notificações WhatsApp e eventual bot de
+  Telegram**: fora do escopo deste repositório; ver seções 9 e 12 do SDD.

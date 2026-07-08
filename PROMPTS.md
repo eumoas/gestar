@@ -6,12 +6,12 @@ rubrica do curso (seção 8.2 do [SDD](SDD-gestar-v1.2.md)).
 
 **Nota de transparência sobre o formato.** O plano original do SDD previa "dez
 prompts incrementais, um commit ao final de cada bloco". Na prática, esta
-sessão foi conduzida em **5 prompts mais amplos**, cada um cobrindo várias
+sessão foi conduzida em **7 prompts mais amplos**, cada um cobrindo várias
 mudanças relacionadas (o agente quebrou cada prompt em várias edições de
-arquivo, e no Prompt 5 em um commit por tela, mas sem um commit por
-sub-etapa nos prompts anteriores). O registro abaixo reflete o que
-realmente aconteceu, prompt a prompt, incluindo os bugs encontrados pelo
-próprio processo de verificação — não uma reconstrução idealizada.
+arquivo, e em alguns em um commit por bloco/tela, mas sem um commit por
+sub-etapa em todos). O registro abaixo reflete o que realmente aconteceu,
+prompt a prompt, incluindo os bugs encontrados pelo próprio processo de
+verificação — não uma reconstrução idealizada.
 
 **Estado de partida.** Quando esta sessão começou, já existia um scaffold
 mínimo: um `backend/app/main.py` com três rotas (`/gestantes`,
@@ -205,3 +205,75 @@ gestantes fictícias), zero mudança de contrato.
 
 Screenshots atualizadas em `docs/screenshots/` (as anteriores, do design
 azul/CSS artesanal, ficaram obsoletas e foram substituídas).
+
+---
+
+## Prompt 6 — Carteira de vacinação e módulo de amamentação (SDD v1.2)
+
+**Prompt:** "acabei de atualizar o sdd e quero nessa etapa incluir a carteira
+de vacinação da gestante e os postos de amamentação." O usuário já tinha
+preparado o material de origem antes de pedir: um SDD atualizado
+(`SDD-gestar-v1.2.md`), o PDF oficial do Calendário Nacional de Vacinação
+2026, um `.docx` da rede de bancos de leite humano (rBLH) da Fiocruz, e —
+mais importante — já tinha rodado `parse_blh.py` sozinho, deixando um
+`blh_unidades.json` pronto com 491 unidades (209 banco, 254 posto de coleta,
+28 centro de referência), faltando só a geocodificação.
+
+**Processo:** de novo, mudança grande e com decisões em aberto (navegação
+crescendo de 6 para 8 telas, se a geocodificação — que demora 10-25 min
+consultando o Nominatim — deveria rodar nesta sessão, e se o SDD deveria ser
+renomeado de volta para `SDD-gestar.md`), então usei `EnterPlanMode` de novo.
+Três perguntas via `AskUserQuestion` antes de escrever qualquer código:
+manter 8 abas diretas (em vez de agrupar), não rodar a geocodificação agora
+(o localizador funciona por UF/município enquanto isso, e ganha mapa sozinho,
+sem mudança de código, quando o script rodar depois), e manter o nome
+`SDD-gestar-v1.2.md` (só atualizando os links do README/PROMPTS.md).
+
+**Resultado, em commits separados:**
+1. Housekeeping: dataset BLH e scripts movidos para `backend/app/data/` e
+   `scripts/` (caminhos que o SDD referencia); PDF e docx oficiais movidos
+   para `design/reference/` (pequenos, mantidos versionados como fonte
+   citável); `calendario_vacinal.json` criado a partir do PDF lido nesta
+   sessão (conferido campo a campo contra a tabela oficial).
+2. Backend: `GET/PATCH /gestantes/{id}/vacinacao`, `POST/GET
+   /gestantes/{id}/amamentacao` e `GET /blh/unidades`, reaproveitando o
+   padrão já existente de status calculado + override manual
+   (`build_carteira`/`CARTEIRA_OVERRIDES`) em vez de inventar um novo. Alerta
+   amarelo automático de dose pendente (dTpa/VSR com folga de 4 semanas) e de
+   dificuldade de amamentação repetida na semana — rodado uma vez no seed,
+   então o painel da equipe passou a ter `contagem.amarelo > 0` pela primeira
+   vez. Tudo testado por `curl` antes de seguir para o frontend.
+3. Frontend: `CarteiraVacinacao.jsx` reaproveita o componente `Timeline` já
+   existente; `Amamentacao.jsx` é tela nova (orientações estáticas, registro
+   de dificuldade/ordenha/doação, localizador com `navigator.geolocation` +
+   fallback de UF/município, mapa `react-leaflet` condicional — só aparece se
+   o backend confirmar unidades geocodificadas). `react-leaflet@5` não
+   instalou (exige React 19); resolvido fixando `react-leaflet@4`, compatível
+   com o React 18 já usado no projeto.
+
+**Verificação além da leitura de código:** como o Chromium headless comum só
+tira screenshot, não clica em nada, subi uma instância com
+`--remote-debugging-port` e um script Python (`websocket-client`) que
+conversa com o Chrome DevTools Protocol de verdade — preencheu o campo UF com
+"SC", clicou no botão "Buscar" e no botão "Registrar dificuldade", e
+capturou a tela depois de cada clique. A primeira tentativa de subir o
+Chromium em background falhou (o processo morria assim que a chamada de
+ferramenta retornava); resolvido rodando com `setsid ... & disown`, que
+desacopla o processo do grupo controlado pela sessão.
+
+## Prompt 7 — Cefaleia isolada e sintoma livre no diário
+
+**Prompt (chegou no meio do trabalho do Prompt 6, endereçada assim que o
+bloco de backend em andamento foi fechado):** "cefaleia intensa deve ser
+sempre um risco de pre eclampia e acho que deve existir a possibilidade da
+gestante inserir outros sintomas para que ela possa indicar para o médico."
+
+**Resultado:** a regra em `triagem_mock.py` exigia cefaleia intensa **e**
+visão embaçada **e** edema juntos para acionar vermelho; virou cefaleia
+intensa sozinha (antes de 37 semanas) já ser suficiente — o SDD foi
+atualizado para refletir a regra nova. O diário de sintomas ganhou um campo
+de texto livre ("Outro sintoma para indicar ao médico"): o que a gestante
+digitar entra na mesma lista enviada à triagem e no mesmo histórico exibido
+depois, mesmo que o motor de regras não reconheça a string e não dispare
+nenhum alerta automático — o objetivo é comunicação com a equipe, não
+triagem automática de texto arbitrário.
