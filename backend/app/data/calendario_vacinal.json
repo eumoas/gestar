@@ -1,0 +1,75 @@
+{
+  "fonte": "Calendário Nacional de Vacinação 2026 — Vacinas da Gestante (Ministério da Saúde/SUS)",
+  "vacinas": [
+    {
+      "id": "hepatite-b",
+      "nome": "Hepatite B",
+      "esquema": "3 doses (conforme histórico vacinal)",
+      "semana_minima": null,
+      "por_gestacao": false,
+      "doencas_evitadas": "Hepatite B, hepatite D",
+      "observacao": null,
+      "sempre_informativa": false
+    },
+    {
+      "id": "dt",
+      "nome": "dT (dupla adulto)",
+      "esquema": "3 doses (conforme histórico vacinal)",
+      "semana_minima": null,
+      "por_gestacao": false,
+      "doencas_evitadas": "Difteria, tétano",
+      "observacao": null,
+      "sempre_informativa": false
+    },
+    {
+      "id": "influenza-trivalente",
+      "nome": "Influenza trivalente",
+      "esquema": "1 dose por temporada",
+      "semana_minima": null,
+      "por_gestacao": false,
+      "doencas_evitadas": "Influenza (gripe)",
+      "observacao": null,
+      "sempre_informativa": false
+    },
+    {
+      "id": "covid-19",
+      "nome": "Covid-19",
+      "esquema": "1 dose a cada gestação",
+      "semana_minima": null,
+      "por_gestacao": true,
+      "doencas_evitadas": "Formas graves da covid-19 e óbitos causados pelo vírus SARS-CoV-2",
+      "observacao": null,
+      "sempre_informativa": false
+    },
+    {
+      "id": "dtpa",
+      "nome": "dTpa",
+      "esquema": "1 dose a partir da 20ª semana gestacional, em cada gestação",
+      "semana_minima": 20,
+      "por_gestacao": true,
+      "doencas_evitadas": "Difteria, tétano, coqueluche",
+      "observacao": null,
+      "sempre_informativa": false
+    },
+    {
+      "id": "febre-amarela",
+      "nome": "Febre amarela",
+      "esquema": "1 dose, em casos excepcionais, conforme histórico vacinal",
+      "semana_minima": null,
+      "por_gestacao": false,
+      "doencas_evitadas": "Febre amarela",
+      "observacao": "A recomendação da vacinação contra a febre amarela para gestantes somente se considera na impossibilidade de adiamento, em caso de residente ou viajante para área de risco epidemiológico e mediante avaliação do serviço de saúde sobre o risco-benefício da vacinação. Recomenda-se 1 dose para as sem comprovação vacinal, para as vacinadas com apenas 1 dose antes dos 5 anos de idade e para as que receberam apenas dose fracionada (em 2018). Em caso de viagem, o prazo mínimo antes de viajar é de 10 dias, pelo tempo necessário à soroconversão.",
+      "sempre_informativa": true
+    },
+    {
+      "id": "vsr",
+      "nome": "Vírus sincicial respiratório (VSR)",
+      "esquema": "1 dose a partir da 28ª semana gestacional, em cada gestação",
+      "semana_minima": 28,
+      "por_gestacao": true,
+      "doencas_evitadas": "Bronquiolite, pneumonia e outras complicações na criança, em seus primeiros 6 meses de vida; a gestante vacinada transfere anticorpos para o bebê",
+      "observacao": null,
+      "sempre_informativa": false
+    }
+  ]
+}

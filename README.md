@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="SDD-gestar.md">Documento de design (SDD)</a> ·
+  <a href="SDD-gestar-v1.2.md">Documento de design (SDD)</a> ·
   <a href="CLAUDE-design.md">Sistema de design da interface</a> ·
   <a href="PROMPTS.md">Processo com o agente de codificação</a>
 </p>
@@ -154,7 +154,7 @@ SQLAlchemy é o próximo passo natural antes de (ou junto com) a Etapa 2 — ver
 
 ```
 .
-├── SDD-gestar.md              documento de design de produto (fonte da verdade)
+├── SDD-gestar-v1.2.md         documento de design de produto (fonte da verdade)
 ├── CLAUDE-design.md           sistema de design da interface (tokens, componentes, regras por tela)
 ├── PROMPTS.md                 registro do processo com o agente de codificação
 ├── requirements.txt           dependências Python (backend)

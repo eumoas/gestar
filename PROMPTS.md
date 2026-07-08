@@ -2,7 +2,7 @@
 
 Este arquivo documenta a sessão de trabalho com o Claude Code (agente de
 codificação) usada para construir a Etapa 1 do Gestar, conforme exigido pela
-rubrica do curso (seção 8.2 do [SDD](SDD-gestar.md)).
+rubrica do curso (seção 8.2 do [SDD](SDD-gestar-v1.2.md)).
 
 **Nota de transparência sobre o formato.** O plano original do SDD previa "dez
 prompts incrementais, um commit ao final de cada bloco". Na prática, esta
