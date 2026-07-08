@@ -1,11 +1,19 @@
+import datetime
+import json
+import math
+import os
+from pathlib import Path
+from typing import Dict, List, Optional
+
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import Dict, List, Optional
-import datetime
+
 from .services.triagem_mock import TriagemMock
 
 app = FastAPI(title="Gestar - Etapa 1")
+
+DATA_DIR = Path(__file__).resolve().parent / "data"
 
 
 class GestanteIn(BaseModel):
@@ -27,6 +35,16 @@ class SintomasIn(BaseModel):
 class CarteiraPatch(BaseModel):
     item_id: str
     status: str
+
+
+class VacinacaoPatch(BaseModel):
+    vacina_id: str
+    status: str
+
+
+class AmamentacaoIn(BaseModel):
+    tipo: str  # 'dificuldade' | 'ordenha' | 'doacao'
+    itens: Optional[Dict] = None
 
 
 # ---------------------------------------------------------------------------
@@ -66,8 +84,16 @@ ALERTAS = [
 ]
 SINTOMAS_HISTORICO = {}  # gestacao_id -> list de registros
 CARTEIRA_OVERRIDES = {}  # item_id -> status manual
+VACINACAO_OVERRIDES = {}  # "{gestacao_id}:{vacina_id}" -> status manual (autodeclarado)
+AMAMENTACAO_REGISTROS = {}  # gestacao_id -> list de registros (dificuldade/ordenha/doacao)
 
 triagem = TriagemMock()
+
+with open(DATA_DIR / "calendario_vacinal.json", encoding="utf-8") as f:
+    VACINAS_CALENDARIO = json.load(f)["vacinas"]
+
+with open(DATA_DIR / "blh_unidades.json", encoding="utf-8") as f:
+    BLH_UNIDADES = json.load(f)["unidades"]
 
 
 # ---------------------------------------------------------------------------
@@ -158,6 +184,87 @@ def build_carteira(g: dict) -> List[dict]:
 
 
 # ---------------------------------------------------------------------------
+# Carteira de vacinação (Calendário Nacional de Vacinação 2026, gestante)
+# ---------------------------------------------------------------------------
+# Folga de 4 semanas após a elegibilidade antes de considerar a dose "em atraso"
+# (SDD, seção 8.1): não pressiona a gestante no primeiro dia em que passa a
+# poder tomar a vacina.
+ALERTAS_VACINACAO = [
+    ("dtpa", 20 + 4, "dTpa ainda não registrada. Procure a equipe de saúde para agendar a dose (indicada a partir da 20ª semana)."),
+    ("vsr", 28 + 4, "VSR ainda não registrada. Procure a equipe de saúde para agendar a dose (indicada a partir da 28ª semana)."),
+]
+
+
+def build_vacinacao(g: dict) -> List[dict]:
+    semanas = calc_semanas(g["dum"])
+    itens = []
+    for v in VACINAS_CALENDARIO:
+        override = VACINACAO_OVERRIDES.get(f"{g['id']}:{v['id']}")
+        if v["sempre_informativa"]:
+            status = "informativa"
+        elif override == "aplicada":
+            status = "aplicada"
+        elif v["semana_minima"] is not None and semanas < v["semana_minima"]:
+            status = "prevista"
+        else:
+            status = "pendente"
+        itens.append({
+            "vacina_id": v["id"],
+            "nome": v["nome"],
+            "esquema": v["esquema"],
+            "doencas_evitadas": v["doencas_evitadas"],
+            "observacao": v["observacao"],
+            "semana_minima": v["semana_minima"],
+            "status": status,
+        })
+    return itens
+
+
+def checar_alerta_vacinacao(g: dict) -> None:
+    semanas = calc_semanas(g["dum"])
+    for vacina_id, semana_alerta, mensagem in ALERTAS_VACINACAO:
+        if semanas < semana_alerta:
+            continue
+        if VACINACAO_OVERRIDES.get(f"{g['id']}:{vacina_id}") == "aplicada":
+            continue
+        origem = f"vacina:{vacina_id}"
+        ja_existe = any(
+            a["gestacao_id"] == g["id"] and a["origem"] == origem and not a["tratado"]
+            for a in ALERTAS
+        )
+        if ja_existe:
+            continue
+        ALERTAS.append({
+            "id": len(ALERTAS) + 1,
+            "gestacao_id": g["id"],
+            "nivel": "amarelo",
+            "mensagem": mensagem,
+            "origem": origem,
+            "tratado": False,
+            "criado_em": datetime.datetime.utcnow().isoformat(),
+        })
+
+
+# Roda uma vez no startup para que o painel da equipe já mostre alertas de
+# vacina pendente para as gestantes do seed que já passaram da semana de
+# elegibilidade (mesmo espírito do alerta vermelho seedado acima).
+for _g in GESTANTES:
+    checar_alerta_vacinacao(_g)
+
+
+# ---------------------------------------------------------------------------
+# Amamentação e banco de leite humano (rBLH)
+# ---------------------------------------------------------------------------
+def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    r = 6371
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlambda = math.radians(lon2 - lon1)
+    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
+    return 2 * r * math.asin(math.sqrt(a))
+
+
+# ---------------------------------------------------------------------------
 # Gestante
 # ---------------------------------------------------------------------------
 @app.get('/api/gestantes')
@@ -207,6 +314,24 @@ async def atualizar_carteira(id: int, payload: CarteiraPatch):
         raise HTTPException(status_code=400, detail="status deve ser 'pendente' ou 'realizada'")
     CARTEIRA_OVERRIDES[payload.item_id] = payload.status
     return {"item_id": payload.item_id, "status": payload.status}
+
+
+@app.get('/api/gestantes/{id}/vacinacao')
+async def vacinacao(id: int):
+    g = find_gestante(id)
+    checar_alerta_vacinacao(g)
+    return {"gestante_id": id, "semana_atual": calc_semanas(g["dum"]), "itens": build_vacinacao(g)}
+
+
+@app.patch('/api/gestantes/{id}/vacinacao')
+async def atualizar_vacinacao(id: int, payload: VacinacaoPatch):
+    find_gestante(id)
+    if payload.status not in ("pendente", "aplicada"):
+        raise HTTPException(status_code=400, detail="status deve ser 'pendente' ou 'aplicada'")
+    if not any(v["id"] == payload.vacina_id for v in VACINAS_CALENDARIO):
+        raise HTTPException(status_code=404, detail="Vacina não encontrada no calendário")
+    VACINACAO_OVERRIDES[f"{id}:{payload.vacina_id}"] = payload.status
+    return {"vacina_id": payload.vacina_id, "status": payload.status}
 
 
 @app.get('/api/gestantes/{id}/sintomas')
@@ -267,6 +392,73 @@ async def registrar_epds(id: int, payload: dict):
     return {**resultado, 'simulado': True}
 
 
+@app.post('/api/gestantes/{id}/amamentacao')
+async def registrar_amamentacao(id: int, payload: AmamentacaoIn):
+    find_gestante(id)
+    if payload.tipo not in ('dificuldade', 'ordenha', 'doacao'):
+        raise HTTPException(status_code=400, detail="tipo deve ser 'dificuldade', 'ordenha' ou 'doacao'")
+    agora = datetime.datetime.utcnow()
+    historico = AMAMENTACAO_REGISTROS.setdefault(id, [])
+    resultado = {'registrado': True}
+
+    if payload.tipo == 'dificuldade':
+        semana_atual = agora.isocalendar()[:2]
+        outras_na_semana = [
+            r for r in historico
+            if r['tipo'] == 'dificuldade'
+            and datetime.datetime.fromisoformat(r['data']).isocalendar()[:2] == semana_atual
+        ]
+        if outras_na_semana:
+            mensagem = 'Mais de uma dificuldade de extração registrada nesta semana. Procure o banco de leite mais próximo para orientação.'
+            ALERTAS.append({
+                'id': len(ALERTAS) + 1,
+                'gestacao_id': id,
+                'nivel': 'amarelo',
+                'mensagem': mensagem,
+                'origem': 'amamentacao',
+                'tratado': False,
+                'criado_em': agora.isoformat(),
+            })
+            resultado['alerta'] = mensagem
+
+    historico.append({'data': agora.isoformat(), 'tipo': payload.tipo, 'itens': payload.itens or {}})
+    return {**resultado, 'simulado': True}
+
+
+@app.get('/api/gestantes/{id}/amamentacao')
+async def historico_amamentacao(id: int):
+    find_gestante(id)
+    return AMAMENTACAO_REGISTROS.get(id, [])
+
+
+@app.get('/api/blh/unidades')
+async def blh_unidades(
+    uf: Optional[str] = None,
+    municipio: Optional[str] = None,
+    lat: Optional[float] = None,
+    lng: Optional[float] = None,
+):
+    resultado = BLH_UNIDADES
+    if uf:
+        resultado = [u for u in resultado if (u.get('uf') or '').lower() == uf.lower()]
+    if municipio:
+        alvo = municipio.strip().lower()
+        resultado = [u for u in resultado if alvo in (u.get('municipio') or '').lower()]
+
+    com_coord = [u for u in resultado if u.get('latitude') is not None]
+    if lat is not None and lng is not None and com_coord:
+        anotadas = [
+            {**u, 'distancia_km': round(haversine_km(lat, lng, u['latitude'], u['longitude']), 1)}
+            for u in com_coord
+        ]
+        anotadas.sort(key=lambda u: u['distancia_km'])
+        resultado = anotadas[:30]
+    else:
+        resultado = resultado[:50]
+
+    return {'total': len(resultado), 'geocodificado': len(com_coord) > 0, 'unidades': resultado}
+
+
 # ---------------------------------------------------------------------------
 # Equipe
 # ---------------------------------------------------------------------------
@@ -308,9 +500,6 @@ async def tratar_alerta(alerta_id: int):
 # Servir o build do frontend (React/Vite) como estático, na mesma porta da API.
 # STATIC_DIR permite apontar para outro local (ex.: layout do container de deploy);
 # por padrão aponta para <raiz do repo>/frontend/dist.
-import os
-from pathlib import Path
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 dist_path = Path(os.environ.get('STATIC_DIR', PROJECT_ROOT / 'frontend' / 'dist'))
 if dist_path.exists():
