@@ -242,8 +242,9 @@ critério de complexidade da Etapa 1.
 Regras determinísticas vestidas de IA, com atraso artificial e rótulo visível de
 resposta simulada:
 
-- Cefaleia intensa + visão embaçada + edema antes de 37 semanas: vermelho (padrão
-  compatível com pré-eclâmpsia), orientação de procurar UBS ou maternidade.
+- Cefaleia intensa antes de 37 semanas: vermelho por si só (padrão compatível com
+  pré-eclâmpsia), orientação de procurar UBS ou maternidade — não depende de
+  visão embaçada ou edema estarem presentes também.
 - Sangramento em qualquer fase: vermelho.
 - Contrações regulares antes de 37 semanas: vermelho.
 - EPDS maior ou igual a 13: vermelho; entre 10 e 12: amarelo, com mensagem acolhedora.

@@ -4,8 +4,9 @@ class TriagemMock:
     """Motor de triagem simulada conforme SDD (regras determinísticas).
 
     Regras principais implementadas:
-    - cefaleia intensa + visao embaçada + edema antes de 37 semanas -> vermelho
-      (padrão compatível com pré-eclâmpsia; cenário de demonstração principal)
+    - cefaleia intensa antes de 37 semanas -> vermelho (sinal de alerta para
+      pré-eclâmpsia por si só, independente de outros sintomas; cenário de
+      demonstração principal)
     - contrações regulares antes de 37 semanas -> vermelho
     - sangramento -> vermelho (regra clínica do protocolo, não exposta como opção
       na interface do diário de sintomas)
@@ -29,8 +30,9 @@ class TriagemMock:
         nivel = 'verde'
         mensagem = 'Sem sinais de alerta.'
 
-        # checar cefaleia intensa + visão embaçada + edema (cenário principal de demonstração)
-        if 'cefaleia intensa' in s and 'visão embaçada' in s and 'edema' in s:
+        # cefaleia intensa é, sozinha, sinal de alerta para pré-eclâmpsia
+        # (cenário principal de demonstração)
+        if 'cefaleia intensa' in s:
             semanas = self._idade_gestacional_semanas(gestante.get('dum'))
             if semanas < 37:
                 nivel = 'vermelho'

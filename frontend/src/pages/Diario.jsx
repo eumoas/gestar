@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Brain, Eye, Droplet, Activity, Frown, Flame, BatteryLow } from 'lucide-react';
+import { Brain, Eye, Droplet, Activity, Frown, Flame, BatteryLow, Plus } from 'lucide-react';
 import { api } from '../api';
 import { useGestanteContext } from '../context/GestanteContext';
 import { Card } from '../components/ui/Card';
@@ -26,6 +26,7 @@ export default function Diario() {
   const { selected, loading } = useGestanteContext();
   const [selecionados, setSelecionados] = useState([]);
   const [intensidades, setIntensidades] = useState({});
+  const [outroSintoma, setOutroSintoma] = useState('');
   const [historico, setHistorico] = useState([]);
   const [enviando, setEnviando] = useState(false);
   const navigate = useNavigate();
@@ -53,6 +54,17 @@ export default function Diario() {
     });
   };
 
+  const adicionarOutroSintoma = () => {
+    const valor = outroSintoma.trim().toLowerCase();
+    if (!valor || selecionados.includes(valor)) {
+      setOutroSintoma('');
+      return;
+    }
+    setSelecionados((prev) => [...prev, valor]);
+    setIntensidades((int) => ({ ...int, [valor]: 3 }));
+    setOutroSintoma('');
+  };
+
   const enviar = async () => {
     if (selecionados.length === 0 || !selected) return;
     setEnviando(true);
@@ -71,6 +83,8 @@ export default function Diario() {
   if (!selected) return <p className="muted">Cadastre uma gestante primeiro.</p>;
 
   const ultimosTrinta = historico.slice(-30);
+  const idsFixos = SINTOMAS.map((s) => s.id);
+  const outrosSelecionados = selecionados.filter((id) => !idsFixos.includes(id));
 
   return (
     <div className="stack">
@@ -86,13 +100,46 @@ export default function Diario() {
               {label}
             </ChipSelecionavel>
           ))}
+          {outrosSelecionados.map((id) => (
+            <ChipSelecionavel key={id} ativo onClick={() => toggle(id)}>
+              {id}
+            </ChipSelecionavel>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-3)' }}>
+          <input
+            type="text"
+            value={outroSintoma}
+            onChange={(e) => setOutroSintoma(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                adicionarOutroSintoma();
+              }
+            }}
+            placeholder="Outro sintoma para indicar ao médico"
+            style={{
+              flex: 1,
+              padding: '10px 12px',
+              borderRadius: 'var(--radius-card-sm)',
+              border: '1px solid var(--border)',
+              fontFamily: 'var(--font-sans)',
+              fontSize: 'var(--text-body)',
+              color: 'var(--text)',
+            }}
+          />
+          <Button variant="outline" onClick={adicionarOutroSintoma}>
+            <Plus size={16} style={{ marginRight: 4, verticalAlign: -3 }} />
+            Adicionar
+          </Button>
         </div>
 
         {selecionados.length > 0 && (
           <div className="stack" style={{ marginTop: 'var(--space-4)' }}>
             {selecionados.map((id) => (
               <div key={id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 'var(--text-secondary)' }}>{SINTOMAS.find((s) => s.id === id)?.label}</span>
+                <span style={{ fontSize: 'var(--text-secondary)' }}>{SINTOMAS.find((s) => s.id === id)?.label || id}</span>
                 <IntensityDots
                   value={intensidades[id] || 0}
                   onChange={(n) => setIntensidades((int) => ({ ...int, [id]: n }))}
