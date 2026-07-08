@@ -5,7 +5,9 @@ import GestanteSwitcher from './components/GestanteSwitcher';
 import Home from './pages/Home';
 import Onboarding from './pages/Onboarding';
 import Carteira from './pages/Carteira';
+import CarteiraVacinacao from './pages/CarteiraVacinacao';
 import Diario from './pages/Diario';
+import Amamentacao from './pages/Amamentacao';
 import ResultadoTriagem from './pages/ResultadoTriagem';
 import PainelEquipe from './pages/PainelEquipe';
 import logoIcon from './assets/logo-icon.png';
@@ -26,7 +28,9 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/carteira" element={<Carteira />} />
+          <Route path="/vacinacao" element={<CarteiraVacinacao />} />
           <Route path="/diario" element={<Diario />} />
+          <Route path="/amamentacao" element={<Amamentacao />} />
           <Route path="/triagem" element={<ResultadoTriagem />} />
           <Route path="/equipe" element={<PainelEquipe />} />
         </Routes>

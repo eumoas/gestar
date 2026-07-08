@@ -21,6 +21,18 @@ export const api = {
   historicoSintomas: (id) => request(`/gestantes/${id}/sintomas`),
   registrarSintomas: (id, sintomas, intensidade) =>
     request(`/gestantes/${id}/sintomas`, { method: 'POST', body: JSON.stringify({ sintomas, intensidade }) }),
+  vacinacao: (id) => request(`/gestantes/${id}/vacinacao`),
+  atualizarVacinacao: (id, vacina_id, status) =>
+    request(`/gestantes/${id}/vacinacao`, { method: 'PATCH', body: JSON.stringify({ vacina_id, status }) }),
+  historicoAmamentacao: (id) => request(`/gestantes/${id}/amamentacao`),
+  registrarAmamentacao: (id, tipo, itens) =>
+    request(`/gestantes/${id}/amamentacao`, { method: 'POST', body: JSON.stringify({ tipo, itens }) }),
+  buscarUnidadesBLH: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
+    ).toString();
+    return request(`/blh/unidades${query ? `?${query}` : ''}`);
+  },
   dashboardEquipe: () => request('/equipe/dashboard'),
   listaAlertas: () => request('/equipe/alertas'),
   tratarAlerta: (alertaId) => request(`/equipe/alertas/${alertaId}`, { method: 'PATCH' }),

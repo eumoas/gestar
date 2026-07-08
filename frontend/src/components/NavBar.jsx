@@ -1,12 +1,14 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, UserPlus, Calendar, NotebookPen, Stethoscope, Users } from 'lucide-react';
+import { Home, UserPlus, Calendar, Syringe, NotebookPen, Milk, Stethoscope, Users } from 'lucide-react';
 
 const LINKS = [
   { to: '/', label: 'Início', end: true, icon: Home },
   { to: '/onboarding', label: 'Cadastro', icon: UserPlus },
   { to: '/carteira', label: 'Carteira', icon: Calendar },
+  { to: '/vacinacao', label: 'Vacinação', icon: Syringe },
   { to: '/diario', label: 'Diário', icon: NotebookPen },
+  { to: '/amamentacao', label: 'Amamentação', icon: Milk },
   { to: '/triagem', label: 'Triagem', icon: Stethoscope },
   { to: '/equipe', label: 'Equipe', icon: Users },
 ];
