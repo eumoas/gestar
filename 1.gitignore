@@ -1,0 +1,48 @@
+# Segredos e ambiente
+.env
+*.env
+!.env.example
+.env.docker
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Banco de dados, uploads e relatórios gerados em runtime
+*.db
+*.sqlite
+*.sqlite3
+Projeto/uploads/
+Projeto/relatorios/
+*.log
+
+
+# Dataset YOLO (imagens e labels — apenas config vai para o Git)
+Yoloboundingbox/images/
+Yoloboundingbox/labels/
+Yoloboundingbox/labels.cache
+Yoloboundingbox/.exportados.json
+
+# Imagens/ NÃO é ignorada em geral: atual-<classe>/, "Sem defeito/" e
+# Novalevadeimagens/ são dataset de verdade, usado por
+# treinar_classificador_cnn.py. Setupantigo/ é exceção: é o material bruto
+# recuperado de um backup (inclui dump de banco .sql — dado sensível, não é
+# imagem) que já foi processado pra dataset utilizável em Setupantigo_yolo/
+# (esse sim fica). O .sql/uploads brutos não têm razão pra sair daqui.
+Imagens/Setupantigo/
+
+# Saída de treino/fine-tuning — regenerável a partir do dataset, pesado
+# (checkpoints por época, logs do TensorBoard, tracking do MLflow)
+Projeto/runs/
+Projeto/dataset_finetune/
+
+# Pacote de entrega já compactado — redundante com o próprio repositório
+EASESPOT_entrega.zip
+EASESPOT_entrega/
+
+# Sessões/cookies de ferramentas locais (n8n, etc.) — nunca deveriam ter
+# credencial de verdade, mas não são código-fonte. (.n8n_db.sqlite já cai
+# na regra *.sqlite acima.)
+.n8n_cookies
